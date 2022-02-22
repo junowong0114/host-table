@@ -7,33 +7,15 @@ usage() {
   printf "hosts.sh [-f CONFIG_FILE] \n\n"
   echo "Description:"
   echo "-f, CONFIG_FILE       The path of hosts.yml [default \"~/.hosts/hosts.yml\"]"
-  echo "-l                    List current host table settings for hostnames in CONFIG_FILE"
   exit -1
 }
 
 CONFIG_FILE=~/.hosts/hosts.yml
-HOST_TABLE_FILE="/mnt/c/Windows/System32/drivers/etc/hosts"
 
-list() {
-    declare -a HOSTNAMES=($(cat $CONFIG_FILE | grep -e '^[^ ].*' | perl -pe "s|(.*):|\1|"))
-
-    for TARGET in "${HOSTNAMES[@]}"; do
-        IP=$(cat $HOST_TABLE_FILE | grep "$TARGET" | perl -pe "s|((?:[0-9]+\.){3}[0-9]+) (.*)|\1|") || true
-        if [[ $IP ]]; then
-            VALUE="$IP ($(cat $CONFIG_FILE | grep $IP | perl -pe "s| *- *['\"]*(.*):((?:[0-9]+\.){3}[0-9]+)['\"]*|\1|"))"
-        else
-            VALUE=""
-        fi
-        echo "$TARGET: $VALUE"
-    done
-    exit 0
-}
-
-while getopts ':f:hl' OPT; do
+while getopts ':f:h' OPT; do
   case $OPT in
     f) CONFIG_FILE=$OPTARG;;
     h) usage;;
-    l) list;;
     \:) printf "Error: Argument missing from -%s option\n\n" $OPTARG
         usage
         exit 2
@@ -81,7 +63,10 @@ while [[ ! $TARGET_HOSTNAME ]]; do
     done
 done
 
+HOST_TABLE_FILE="/mnt/c/Windows/System32/drivers/etc/hosts"
+
 printf "\nSelect an ip to be set to $TARGET_HOSTNAME:\n"
+
 while [[ ! $OPTION ]]; do
     select OPTION in "${OPTIONS[@]}"; do
         if [[ ! $OPTION ]]; then
